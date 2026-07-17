@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Education | Know Bangladesh</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🇧🇩</text></svg>">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --green: #006A4E;
+    --green-dark: #004d38;
+    --red: #F42A41;
+    --white: #ffffff;
+    --light-bg: #f4f7f6;
+    --text-dark: #1a1a1a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-dark);
+    background: var(--light-bg);
+  }
+
+  h1, h2, h3, .logo { font-family: 'Orbitron', sans-serif; }
+
+  header {
+    background: var(--green);
+    color: var(--white);
+    padding: 18px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  }
+
+  .logo {
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-circle { width: 22px; height: 22px; background: var(--red); border-radius: 50%; }
+
+  nav ul { list-style: none; display: flex; gap: 28px; }
+  nav a { color: var(--white); text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: color 0.2s ease; }
+  nav a:hover { color: var(--red); }
+  nav a.active { color: var(--red); border-bottom: 2px solid var(--red); padding-bottom: 4px; }
+
+  .page-banner {
+    background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%);
+    color: var(--white);
+    text-align: center;
+    padding: 70px 20px;
+  }
+
+  .page-banner h1 { font-size: 2.6rem; font-weight: 900; letter-spacing: 1px; }
+  .page-banner p { margin-top: 12px; opacity: 0.9; font-size: 1.05rem; }
+
+  .content { max-width: 1000px; margin: 0 auto; padding: 60px 20px; }
+
+  /* ---------- Ladder / stages layout ---------- */
+  .ladder {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin-bottom: 50px;
+  }
+
+  .stage {
+    background: var(--white);
+    border-left: 5px solid var(--red);
+    border-radius: 10px;
+    padding: 22px 28px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+
+  .stage .age {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--green);
+    font-weight: 700;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    min-width: 90px;
+  }
+
+  .stage h3 { font-size: 1.1rem; margin-bottom: 6px; }
+  .stage p { color: #444; font-size: 0.92rem; line-height: 1.6; }
+
+  /* ---------- Topic cards (same pattern as Culture page) ---------- */
+  .section-title { text-align: center; margin-bottom: 24px; }
+  .section-title h2 { font-size: 1.8rem; color: var(--green); margin-bottom: 6px; }
+  .section-title p { color: #555; font-size: 0.95rem; }
+
+  .topic-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    grid-auto-rows: 1fr;
+    align-items: stretch;
+    gap: 22px;
+    margin-bottom: 20px;
+  }
+
+  .topic {
+    background: var(--white);
+    border-top: 4px solid var(--green);
+    border-radius: 12px;
+    padding: 24px 24px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+  }
+
+  .topic .icon { font-size: 1.8rem; margin-bottom: 8px; }
+  .topic h3 { color: var(--red); font-size: 1.05rem; margin-bottom: 8px; }
+  .topic p { color: #444; line-height: 1.6; font-size: 0.9rem; }
+
+  #nctbCard, #madrasahCard, #duCard { transition: transform 0.2s ease, box-shadow 0.2s ease; cursor: pointer; }
+  #nctbCard:hover, #madrasahCard:hover, #duCard:hover { transform: translateY(-4px); box-shadow: 0 10px 22px rgba(0,0,0,0.1); }
+
+  .stat-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+    margin: 40px 0;
+  }
+
+  .stat {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 20px 26px;
+    text-align: center;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+    min-width: 140px;
+  }
+
+  .stat .num {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--green);
+    font-size: 1.6rem;
+    font-weight: 700;
+  }
+
+  .stat .label { font-size: 0.8rem; color: #666; margin-top: 4px; }
+
+  footer {
+    background: var(--green-dark);
+    color: var(--white);
+    text-align: center;
+    padding: 26px 20px;
+    font-size: 0.85rem;
+  }
+
+  footer span { color: var(--red); font-weight: 600; }
+
+  @media (max-width: 600px) {
+    header { flex-direction: column; gap: 14px; padding: 16px; }
+    nav ul { gap: 16px; flex-wrap: wrap; justify-content: center; }
+    .page-banner h1 { font-size: 1.9rem; }
+    .stage { flex-direction: column; gap: 6px; }
+  }
+</style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+      <span class="logo-circle"></span>
+      KNOW BANGLADESH
+    </div>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="history.html">History</a></li>
+        <li><a href="culture.html">Culture</a></li>
+        <li><a href="districts.html">Districts</a></li>
+        <li><a href="education.html" class="active">Education</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section class="page-banner">
+    <h1>Education in Bangladesh</h1>
+    <p>From free primary school to universities — how learning works across the country</p>
+  </section>
+
+  <div class="content">
+
+    <div class="section-title">
+      <h2>The School Ladder</h2>
+      <p>Every student in Bangladesh follows roughly this path</p>
+    </div>
+
+    <div class="ladder">
+      <div class="stage">
+        <span class="age">Age 6–10</span>
+        <div>
+          <h3>Primary School (Grades 1–5)</h3>
+          <p>Free and compulsory education for all children, provided by government, non-government, and religious (madrasah) schools. Textbooks are given out free every year.</p>
+        </div>
+      </div>
+
+      <div class="stage">
+        <span class="age">Age 11–13</span>
+        <div>
+          <h3>Junior Secondary (Grades 6–8)</h3>
+          <p>Still part of free, compulsory education under Bangladesh's constitution, covering subjects like Bangla, English, Math, Science, and Social Studies.</p>
+        </div>
+      </div>
+
+      <div class="stage">
+        <span class="age">Age 14–15</span>
+        <div>
+          <h3>Secondary (Grades 9–10)</h3>
+          <p>Students choose a track — Science, Business Studies, or Humanities. This stage ends with the SSC (Secondary School Certificate) public exam.</p>
+        </div>
+      </div>
+
+      <div class="stage">
+        <span class="age">Age 16–17</span>
+        <div>
+          <h3>Higher Secondary (Grades 11–12)</h3>
+          <p>Two more years of study, usually at a college, ending with the HSC (Higher Secondary Certificate) exam — the main gateway into university.</p>
+        </div>
+      </div>
+
+      <div class="stage">
+        <span class="age">Age 18+</span>
+        <div>
+          <h3>University & Higher Education</h3>
+          <p>Bachelor's degrees typically take 4 years (Honours) at one of Bangladesh's public and private universities, followed by optional Master's and PhD study.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">
+      <h2>Key Things to Know</h2>
+      <p>How the system is organized behind the scenes</p>
+    </div>
+
+    <div class="topic-grid">
+      <a href="https://nctb.gov.bd" target="_blank" rel="noopener noreferrer" style="text-decoration:none; color:inherit; display:flex; height:100%;">
+        <div class="topic" id="nctbCard">
+          <div class="icon">📚</div>
+          <h3>NCTB</h3>
+          <p>The National Curriculum and Textbook Board creates the curriculum and prints free textbooks used by almost every school in the country, distributed to over 40 million students each year.</p>
+        </div>
+      </a>
+
+      <a href="https://bmeb.gov.bd" target="_blank" rel="noopener noreferrer" style="text-decoration:none; color:inherit; display:flex; height:100%;">
+        <div class="topic" id="madrasahCard">
+          <div class="icon">🕌</div>
+          <h3>Madrasah Education</h3>
+          <p>A parallel religious education system running alongside general schools, with its own stages: Ebtedayee, Dakhil, Alim, Fazil, and Kamil, roughly matching primary through master's level.</p>
+        </div>
+      </a>
+
+      <a href="https://du.ac.bd" target="_blank" rel="noopener noreferrer" style="text-decoration:none; color:inherit; display:flex; height:100%;">
+        <div class="topic" id="duCard">
+          <div class="icon">🏛️</div>
+          <h3>Dhaka University</h3>
+          <p>Founded in 1921, it's the oldest and most prestigious university in Bangladesh, often called the "Oxford of the East."</p>
+        </div>
+      </a>
+    </div>
+
+    <div class="stat-strip">
+      <div class="stat">
+        <div class="num">98%</div>
+        <div class="label">Primary school enrollment</div>
+      </div>
+      <div class="stat">
+        <div class="num">43+</div>
+        <div class="label">Public universities</div>
+      </div>
+      <div class="stat">
+        <div class="num">100+</div>
+        <div class="label">Private universities</div>
+      </div>
+      <div class="stat">
+        <div class="num">1921</div>
+        <div class="label">Dhaka University founded</div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    Made with ❤️ for <span>Bangladesh</span> — a learning project by a young developer
+  </footer>
+
+</body>
+</html>
