@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script>
+  (function () {
+    var saved = localStorage.getItem('bd-theme');
+    var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+  })();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Culture Topic Details | Know Bangladesh</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🇧🇩</text></svg>">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --green: #006A4E;
+    --green-dark: #004d38;
+    --red: #F42A41;
+    --white: #ffffff;
+    --light-bg: #f4f7f6;
+    --text-dark: #1a1a1a;
+    --card-bg: #ffffff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-dark);
+    background: var(--light-bg);
+  }
+
+  h1, h2, h3, .logo { font-family: 'Orbitron', sans-serif; }
+
+  header {
+    background: var(--green);
+    color: var(--white);
+    padding: 12px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  }
+
+  .logo {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--white);
+  }
+
+  .logo-circle { width: 16px; height: 16px; background: var(--red); border-radius: 50%; }
+
+  nav ul { list-style: none; display: flex; gap: 16px; }
+  nav a { color: var(--white); text-decoration: none; font-weight: 600; font-size: 0.82rem; transition: color 0.2s ease; }
+  nav a:hover { color: var(--red); }
+  nav a.active { color: var(--red); border-bottom: 2px solid var(--red); padding-bottom: 4px; }
+
+  .content { max-width: 900px; margin: 0 auto; padding: 40px 20px 70px; }
+
+  .breadcrumb {
+    font-size: 0.85rem;
+    color: #777;
+    margin-bottom: 20px;
+  }
+  .breadcrumb a { color: var(--green); text-decoration: none; font-weight: 600; }
+  .breadcrumb a:hover { text-decoration: underline; }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 24px;
+    color: var(--green);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  .back-link:hover { color: var(--red); }
+
+  .district-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+    overflow: hidden;
+  }
+
+  .district-hero {
+    width: 100%;
+    max-height: 320px;
+    object-fit: cover;
+    display: block;
+    background: var(--light-bg);
+  }
+
+  .district-body { padding: 32px 34px; }
+
+  .district-body h1 {
+    color: var(--green);
+    font-size: 2rem;
+    margin-bottom: 6px;
+  }
+
+  .district-tagline {
+    color: var(--red);
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 18px;
+  }
+
+  .division-badge {
+    display: inline-block;
+    background: var(--light-bg);
+    border: 1px solid #ddd;
+    color: #555;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    margin-bottom: 20px;
+  }
+
+  .district-extract {
+    color: #333;
+    font-size: 1rem;
+    line-height: 1.85;
+    margin-bottom: 24px;
+  }
+  .district-extract p { margin-bottom: 16px; }
+  .district-extract h2 {
+    color: var(--green);
+    font-size: 1.35rem;
+    margin: 34px 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--light-bg);
+  }
+  .district-extract h3 {
+    color: var(--text-dark);
+    font-size: 1.1rem;
+    margin: 22px 0 10px;
+  }
+  .district-extract h2:first-child,
+  .district-extract h3:first-child { margin-top: 0; }
+  .district-extract ul, .district-extract ol { margin: 0 0 16px 24px; }
+  .district-extract li { margin-bottom: 6px; }
+
+  .read-more {
+    display: inline-block;
+    background: var(--green);
+    color: var(--white);
+    text-decoration: none;
+    padding: 10px 22px;
+    border-radius: 24px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: background 0.2s ease;
+  }
+  .read-more:hover { background: var(--green-dark); }
+
+  .attribution {
+    margin-top: 22px;
+    font-size: 0.75rem;
+    color: #999;
+  }
+  .attribution a { color: #999; }
+
+  /* ---------- Loading state ---------- */
+  .loading {
+    padding: 60px 34px;
+    text-align: center;
+    color: #777;
+  }
+  .spinner {
+    width: 34px;
+    height: 34px;
+    border: 4px solid #e2e2e2;
+    border-top-color: var(--green);
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---------- Error state ---------- */
+  .error-state {
+    padding: 50px 34px;
+    text-align: center;
+  }
+  .error-state h2 { color: var(--red); margin-bottom: 10px; font-size: 1.3rem; }
+  .error-state p { color: #666; margin-bottom: 20px; font-size: 0.92rem; }
+  .error-state a {
+    display: inline-block;
+    background: var(--red);
+    color: var(--white);
+    text-decoration: none;
+    padding: 10px 22px;
+    border-radius: 24px;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  footer {
+    background: var(--green-dark);
+    color: var(--white);
+    text-align: center;
+    padding: 26px 20px;
+    font-size: 0.85rem;
+  }
+
+  footer span { color: var(--red); font-weight: 600; }
+
+  @media (max-width: 600px) {
+    header { flex-direction: column; gap: 14px; padding: 16px;     .site-search { margin-left: 0; }
+    .site-search input, .site-search input:focus { width: 220px; }
+  }
+    nav ul { gap: 16px; flex-wrap: wrap; justify-content: center; }
+    .district-body { padding: 24px 20px; }
+  }
+
+  .site-search {
+    position: relative;
+    margin-left: 14px;
+  }
+
+  .site-search input {
+    width: 190px;
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.35);
+    background: rgba(255,255,255,0.15);
+    color: var(--white);
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.82rem;
+    outline: none;
+    transition: background 0.2s ease, width 0.2s ease;
+  }
+  .site-search input::placeholder { color: rgba(255,255,255,0.75); }
+  .site-search input:focus { background: rgba(255,255,255,0.25); width: 220px; }
+
+  .site-search-results {
+    display: none;
+    position: absolute;
+    top: 38px;
+    right: 0;
+    width: 280px;
+    max-height: 340px;
+    overflow-y: auto;
+    background: var(--card-bg);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    z-index: 200;
+  }
+  .site-search-results.open { display: block; }
+
+  .site-search-result {
+    display: block;
+    padding: 10px 14px;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    cursor: pointer;
+  }
+  .site-search-result:last-child { border-bottom: none; }
+  .site-search-result:hover, .site-search-result.active { background: var(--light-bg); }
+  .site-search-result .r-label { color: var(--text-dark); font-weight: 600; font-size: 0.88rem; }
+  .site-search-result .r-sub { color: #888; font-size: 0.72rem; margin-top: 2px; }
+
+  .site-search-empty {
+    padding: 14px;
+    color: #999;
+    font-size: 0.82rem;
+    text-align: center;
+  }
+
+  .theme-toggle {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: var(--white);
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease, transform 0.2s ease;
+    margin-left: 16px;
+  }
+  .theme-toggle:hover { background: rgba(255,255,255,0.3); transform: scale(1.08); }
+
+  [data-theme="dark"] {
+    --light-bg: #14181c;
+    --text-dark: #e8e8e8;
+    --card-bg: #1f2428;
+  }
+  [data-theme="dark"] .district-extract { color: #cfd3d6; }
+  [data-theme="dark"] .district-extract h3 { color: #e8e8e8; }
+  [data-theme="dark"] .division-badge { background: #262c31; border-color: #3a4046; color: #b8bcc0; }
+  [data-theme="dark"] .breadcrumb { color: #9aa0a6; }
+  [data-theme="dark"] .attribution { color: #7a8086; }
+  [data-theme="dark"] .attribution a { color: #7a8086; }
+  [data-theme="dark"] .loading { color: #9aa0a6; }
+  [data-theme="dark"] .spinner { border-color: #3a4046; border-top-color: var(--green); }
+  [data-theme="dark"] .error-state p { color: #b8bcc0; }
+  [data-theme="dark"] .district-extract h2 { border-bottom-color: #2c3238; }
+</style>
+</head>
+<body>
+
+  <header>
+    <a href="index.html" class="logo">
+      <span class="logo-circle"></span>
+      KNOW BANGLADESH
+    </a>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="location.html">Location</a></li>
+        <li><a href="history.html">History</a></li>
+        <li><a href="culture.html" class="active">Culture</a></li>
+        <li><a href="districts.html">Districts</a></li>
+        <li><a href="tourism.html">Tourism</a></li>
+        <li><a href="education.html">Education</a></li>
+      </ul>
+    </nav>
+        <div class="site-search">
+      <input type="text" id="siteSearchInput" placeholder="Search History, Dhaka…" autocomplete="off">
+      <div id="siteSearchResults" class="site-search-results"></div>
+    </div>
+
+    <button id="themeToggle" class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button>
+  </header>
+
+  <script>
+    function toggleTheme() {
+      var html = document.documentElement;
+      var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('bd-theme', next);
+      updateThemeIcon();
+    }
+    function updateThemeIcon() {
+      var btn = document.getElementById('themeToggle');
+      if (btn) btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+    }
+    updateThemeIcon();
+  </script>
+
+  <div class="content">
+    <a class="back-link" href="culture.html" onclick="return goBackToCulture(event)">&larr; Back to Culture</a>
+    <div class="breadcrumb" id="breadcrumb">
+      <a href="culture.html" onclick="return goBackToCulture(event)">Culture</a> / <span id="bcTopic">…</span>
+    </div>
+
+    <div class="district-card" id="topicCard">
+      <div class="loading" id="loadingState">
+        <div class="spinner"></div>
+        Fetching live details…
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <span>Know Bangladesh</span> — A project showcasing the beauty and heritage of Bangladesh.
+© 2026. All rights reserved.
+  </footer>
+
+  <script>
+    function goBackToCulture(e) {
+      if (window.opener && !window.opener.closed) {
+        e.preventDefault();
+        window.close();
+        return false;
+      }
+      return true; // no opener (page opened directly/bookmarked) — just navigate normally
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const topicName = params.get('topic');
+    const wikiTitle = params.get('wiki') || topicName;
+
+    const card = document.getElementById('topicCard');
+
+    if (!topicName) {
+      document.title = 'No Topic Selected | Know Bangladesh';
+      document.getElementById('bcTopic').textContent = 'No topic selected';
+      card.innerHTML =
+        '<div class="error-state">' +
+          '<h2>No topic selected</h2>' +
+          '<p>This page shows live details for one culture topic at a time. Head back to the Culture page and click a topic to open its details here.</p>' +
+          '<a href="culture.html">Go to Culture &rarr;</a>' +
+        '</div>';
+    } else {
+      document.title = topicName + ' | Know Bangladesh';
+      document.getElementById('bcTopic').textContent = topicName;
+      loadTopic();
+    }
+
+    function renderError() {
+      card.innerHTML =
+        '<div class="error-state">' +
+          '<h2>Couldn\'t load live details</h2>' +
+          '<p>We couldn\'t reach the data source for "' + topicName + '" right now. You can look it up directly instead:</p>' +
+          '<a href="https://en.wikipedia.org/wiki/' + encodeURIComponent(wikiTitle.replace(/ /g, '_')) + '" target="_blank" rel="noopener">Search on Wikipedia &rarr;</a>' +
+        '</div>';
+    }
+
+    function escapeHtml(s) {
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    }
+
+    function normalizeExtract(raw) {
+      if (!raw) return '';
+      // If the API already gave us real HTML (has <p> or <h2>/<h3> tags), use it as-is.
+      if (/<p[\s>]|<h[23][\s>]/i.test(raw)) {
+        return raw;
+      }
+      // Otherwise treat it as plain text that may contain "== Heading ==" markers
+      // and blank-line-separated paragraphs, and build clean HTML ourselves.
+      const lines = raw.split(/\n+/);
+      let html = '';
+      let paragraph = [];
+
+      function flush() {
+        if (paragraph.length) {
+          html += '<p>' + paragraph.join(' ') + '</p>';
+          paragraph = [];
+        }
+      }
+
+      lines.forEach(function (line) {
+        const trimmed = line.trim();
+        if (!trimmed) { flush(); return; }
+        const heading = trimmed.match(/^(={2,4})\s*(.+?)\s*\1$/);
+        if (heading) {
+          flush();
+          const tag = heading[1].length >= 3 ? 'h3' : 'h2';
+          html += '<' + tag + '>' + escapeHtml(heading[2]) + '</' + tag + '>';
+        } else {
+          paragraph.push(escapeHtml(trimmed));
+        }
+      });
+      flush();
+      return html;
+    }
+
+    function renderTopic(page, title, fallbackImage) {
+      const image = page.thumbnail ? page.thumbnail.source : (fallbackImage || null);
+      const pageUrl = (page.fullurl) ? page.fullurl
+        : 'https://en.wikipedia.org/wiki/' + encodeURIComponent(wikiTitle.replace(/ /g, '_'));
+      const extractHtml = normalizeExtract(page.extract) || 'No article text is available for this topic yet.';
+
+      let html = '';
+      if (image) {
+        html += '<img class="district-hero" src="' + image + '" alt="' + topicName + '">';
+      }
+      html += '<div class="district-body">';
+      html += '<h1>' + (title || topicName) + '</h1>';
+      html += '<span class="division-badge">Bangladeshi Culture</span>';
+      html += '<div class="district-extract">' + extractHtml + '</div>';
+      html += '<a class="read-more" href="' + pageUrl + '" target="_blank" rel="noopener">Read this article on Wikipedia &rarr;</a>';
+      html += '<div class="attribution">Full article text fetched live from the <a href="https://www.mediawiki.org/wiki/Extension:TextExtracts" target="_blank" rel="noopener">Wikipedia API</a> · available under <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a></div>';
+      html += '</div>';
+
+      card.innerHTML = html;
+    }
+
+    // Some articles (list/overview-style pages especially) have no infobox image,
+    // so pageimages returns nothing. When that happens, look through the article's
+    // embedded images ourselves and pick the first real photo (skip icons/logos/svgs).
+    function fetchFallbackImage(title) {
+      const url = 'https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1' +
+        '&generator=images&gimlimit=25&titles=' + encodeURIComponent(title) +
+        '&prop=imageinfo&iiprop=url|mime|size';
+
+      return fetch(url)
+        .then(function (res) { return res.ok ? res.json() : null; })
+        .then(function (data) {
+          const pages = data && data.query && data.query.pages;
+          if (!pages) return null;
+          const candidates = Object.values(pages)
+            .map(function (p) { return p.imageinfo && p.imageinfo[0]; })
+            .filter(function (info) {
+              return info &&
+                /^image\/(jpeg|png)$/.test(info.mime) &&
+                info.width >= 250 && info.height >= 250;
+            });
+          return candidates.length ? candidates[0].url : null;
+        })
+        .catch(function () { return null; });
+    }
+
+    function loadTopic() {
+      const apiUrl = 'https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1' +
+        '&prop=extracts|pageimages|info' +
+        '&explaintext=0&exsectionformat=plain' +
+        '&piprop=thumbnail&pithumbsize=1000' +
+        '&inprop=url' +
+        '&titles=' + encodeURIComponent(wikiTitle);
+
+      fetch(apiUrl)
+        .then(function (res) {
+          if (!res.ok) throw new Error('Request failed');
+          return res.json();
+        })
+        .then(function (data) {
+          const pages = data.query && data.query.pages;
+          if (!pages) throw new Error('No data');
+          const page = pages[Object.keys(pages)[0]];
+          if (!page || page.missing !== undefined || !page.extract) throw new Error('Not found');
+
+          if (page.thumbnail) {
+            renderTopic(page, page.title);
+          } else {
+            fetchFallbackImage(page.title).then(function (fallbackImage) {
+              renderTopic(page, page.title, fallbackImage);
+            });
+          }
+        })
+        .catch(function () {
+          renderError();
+        });
+    }
+  </script>
+
+  <script>
+    // Site-wide search index: pages, divisions, districts, and culture topics.
+    const searchIndex = [{"label": "Home", "sub": "Homepage", "url": "index.html"}, {"label": "Location", "sub": "Where Bangladesh is in the world", "url": "location.html"}, {"label": "History", "sub": "Timeline of Bangladesh", "url": "history.html"}, {"label": "Culture", "sub": "Festivals, food, music & more", "url": "culture.html"}, {"label": "Districts", "sub": "All 64 districts", "url": "districts.html"}, {"label": "Tourism", "sub": "Places to visit", "url": "tourism.html"}, {"label": "Education", "sub": "Schools & universities", "url": "education.html"}, {"label": "Dhaka Division", "sub": "Division", "url": "districts.html?div=Dhaka"}, {"label": "Chattogram Division", "sub": "Division", "url": "districts.html?div=Chattogram"}, {"label": "Rajshahi Division", "sub": "Division", "url": "districts.html?div=Rajshahi"}, {"label": "Khulna Division", "sub": "Division", "url": "districts.html?div=Khulna"}, {"label": "Barishal Division", "sub": "Division", "url": "districts.html?div=Barishal"}, {"label": "Sylhet Division", "sub": "Division", "url": "districts.html?div=Sylhet"}, {"label": "Rangpur Division", "sub": "Division", "url": "districts.html?div=Rangpur"}, {"label": "Mymensingh Division", "sub": "Division", "url": "districts.html?div=Mymensingh"}, {"label": "Dhaka", "sub": "Dhaka Division", "url": "district-detail.html?district=Dhaka&wiki=Dhaka%20District&division=Dhaka"}, {"label": "Gazipur", "sub": "Dhaka Division", "url": "district-detail.html?district=Gazipur&wiki=Gazipur%20District&division=Dhaka"}, {"label": "Narayanganj", "sub": "Dhaka Division", "url": "district-detail.html?district=Narayanganj&wiki=Narayanganj%20District&division=Dhaka"}, {"label": "Tangail", "sub": "Dhaka Division", "url": "district-detail.html?district=Tangail&wiki=Tangail%20District&division=Dhaka"}, {"label": "Faridpur", "sub": "Dhaka Division", "url": "district-detail.html?district=Faridpur&wiki=Faridpur%20District&division=Dhaka"}, {"label": "Manikganj", "sub": "Dhaka Division", "url": "district-detail.html?district=Manikganj&wiki=Manikganj%20District&division=Dhaka"}, {"label": "Munshiganj", "sub": "Dhaka Division", "url": "district-detail.html?district=Munshiganj&wiki=Munshiganj%20District&division=Dhaka"}, {"label": "Gopalganj", "sub": "Dhaka Division", "url": "district-detail.html?district=Gopalganj&wiki=Gopalganj%20District&division=Dhaka"}, {"label": "Kishoreganj", "sub": "Dhaka Division", "url": "district-detail.html?district=Kishoreganj&wiki=Kishoreganj%20District&division=Dhaka"}, {"label": "Madaripur", "sub": "Dhaka Division", "url": "district-detail.html?district=Madaripur&wiki=Madaripur%20District&division=Dhaka"}, {"label": "Narsingdi", "sub": "Dhaka Division", "url": "district-detail.html?district=Narsingdi&wiki=Narsingdi%20District&division=Dhaka"}, {"label": "Rajbari", "sub": "Dhaka Division", "url": "district-detail.html?district=Rajbari&wiki=Rajbari%20District&division=Dhaka"}, {"label": "Shariatpur", "sub": "Dhaka Division", "url": "district-detail.html?district=Shariatpur&wiki=Shariatpur%20District&division=Dhaka"}, {"label": "Chattogram", "sub": "Chattogram Division", "url": "district-detail.html?district=Chattogram&wiki=Chattogram%20District&division=Chattogram"}, {"label": "Cox's Bazar", "sub": "Chattogram Division", "url": "district-detail.html?district=Cox%27s%20Bazar&wiki=Cox%27s%20Bazar%20District&division=Chattogram"}, {"label": "Cumilla", "sub": "Chattogram Division", "url": "district-detail.html?district=Cumilla&wiki=Cumilla%20District&division=Chattogram"}, {"label": "Brahmanbaria", "sub": "Chattogram Division", "url": "district-detail.html?district=Brahmanbaria&wiki=Brahmanbaria%20District&division=Chattogram"}, {"label": "Chandpur", "sub": "Chattogram Division", "url": "district-detail.html?district=Chandpur&wiki=Chandpur%20District&division=Chattogram"}, {"label": "Feni", "sub": "Chattogram Division", "url": "district-detail.html?district=Feni&wiki=Feni%20District&division=Chattogram"}, {"label": "Noakhali", "sub": "Chattogram Division", "url": "district-detail.html?district=Noakhali&wiki=Noakhali%20District&division=Chattogram"}, {"label": "Lakshmipur", "sub": "Chattogram Division", "url": "district-detail.html?district=Lakshmipur&wiki=Lakshmipur%20District&division=Chattogram"}, {"label": "Khagrachhari", "sub": "Chattogram Division", "url": "district-detail.html?district=Khagrachhari&wiki=Khagrachari%20District&division=Chattogram"}, {"label": "Rangamati", "sub": "Chattogram Division", "url": "district-detail.html?district=Rangamati&wiki=Rangamati%20District&division=Chattogram"}, {"label": "Bandarban", "sub": "Chattogram Division", "url": "district-detail.html?district=Bandarban&wiki=Bandarban%20District&division=Chattogram"}, {"label": "Rajshahi", "sub": "Rajshahi Division", "url": "district-detail.html?district=Rajshahi&wiki=Rajshahi%20District&division=Rajshahi"}, {"label": "Bogura", "sub": "Rajshahi Division", "url": "district-detail.html?district=Bogura&wiki=Bogra%20District&division=Rajshahi"}, {"label": "Pabna", "sub": "Rajshahi Division", "url": "district-detail.html?district=Pabna&wiki=Pabna%20District&division=Rajshahi"}, {"label": "Sirajganj", "sub": "Rajshahi Division", "url": "district-detail.html?district=Sirajganj&wiki=Sirajganj%20District&division=Rajshahi"}, {"label": "Natore", "sub": "Rajshahi Division", "url": "district-detail.html?district=Natore&wiki=Natore%20District&division=Rajshahi"}, {"label": "Naogaon", "sub": "Rajshahi Division", "url": "district-detail.html?district=Naogaon&wiki=Naogaon%20District&division=Rajshahi"}, {"label": "Chapainawabganj", "sub": "Rajshahi Division", "url": "district-detail.html?district=Chapainawabganj&wiki=Chapai%20Nawabganj%20District&division=Rajshahi"}, {"label": "Joypurhat", "sub": "Rajshahi Division", "url": "district-detail.html?district=Joypurhat&wiki=Joypurhat%20District&division=Rajshahi"}, {"label": "Khulna", "sub": "Khulna Division", "url": "district-detail.html?district=Khulna&wiki=Khulna%20District&division=Khulna"}, {"label": "Jashore", "sub": "Khulna Division", "url": "district-detail.html?district=Jashore&wiki=Jessore%20District&division=Khulna"}, {"label": "Satkhira", "sub": "Khulna Division", "url": "district-detail.html?district=Satkhira&wiki=Satkhira%20District&division=Khulna"}, {"label": "Bagerhat", "sub": "Khulna Division", "url": "district-detail.html?district=Bagerhat&wiki=Bagerhat%20District&division=Khulna"}, {"label": "Kushtia", "sub": "Khulna Division", "url": "district-detail.html?district=Kushtia&wiki=Kushtia%20District&division=Khulna"}, {"label": "Jhenaidah", "sub": "Khulna Division", "url": "district-detail.html?district=Jhenaidah&wiki=Jhenaidah%20District&division=Khulna"}, {"label": "Magura", "sub": "Khulna Division", "url": "district-detail.html?district=Magura&wiki=Magura%20District&division=Khulna"}, {"label": "Narail", "sub": "Khulna Division", "url": "district-detail.html?district=Narail&wiki=Narail%20District&division=Khulna"}, {"label": "Chuadanga", "sub": "Khulna Division", "url": "district-detail.html?district=Chuadanga&wiki=Chuadanga%20District&division=Khulna"}, {"label": "Meherpur", "sub": "Khulna Division", "url": "district-detail.html?district=Meherpur&wiki=Meherpur%20District&division=Khulna"}, {"label": "Barishal", "sub": "Barishal Division", "url": "district-detail.html?district=Barishal&wiki=Barisal%20District&division=Barishal"}, {"label": "Bhola", "sub": "Barishal Division", "url": "district-detail.html?district=Bhola&wiki=Bhola%20District&division=Barishal"}, {"label": "Patuakhali", "sub": "Barishal Division", "url": "district-detail.html?district=Patuakhali&wiki=Patuakhali%20District&division=Barishal"}, {"label": "Pirojpur", "sub": "Barishal Division", "url": "district-detail.html?district=Pirojpur&wiki=Pirojpur%20District&division=Barishal"}, {"label": "Barguna", "sub": "Barishal Division", "url": "district-detail.html?district=Barguna&wiki=Barguna%20District&division=Barishal"}, {"label": "Jhalokati", "sub": "Barishal Division", "url": "district-detail.html?district=Jhalokati&wiki=Jhalokati%20District&division=Barishal"}, {"label": "Sylhet", "sub": "Sylhet Division", "url": "district-detail.html?district=Sylhet&wiki=Sylhet%20District&division=Sylhet"}, {"label": "Moulvibazar", "sub": "Sylhet Division", "url": "district-detail.html?district=Moulvibazar&wiki=Moulvibazar%20District&division=Sylhet"}, {"label": "Habiganj", "sub": "Sylhet Division", "url": "district-detail.html?district=Habiganj&wiki=Habiganj%20District&division=Sylhet"}, {"label": "Sunamganj", "sub": "Sylhet Division", "url": "district-detail.html?district=Sunamganj&wiki=Sunamganj%20District&division=Sylhet"}, {"label": "Rangpur", "sub": "Rangpur Division", "url": "district-detail.html?district=Rangpur&wiki=Rangpur%20District&division=Rangpur"}, {"label": "Dinajpur", "sub": "Rangpur Division", "url": "district-detail.html?district=Dinajpur&wiki=Dinajpur%20District&division=Rangpur"}, {"label": "Kurigram", "sub": "Rangpur Division", "url": "district-detail.html?district=Kurigram&wiki=Kurigram%20District&division=Rangpur"}, {"label": "Gaibandha", "sub": "Rangpur Division", "url": "district-detail.html?district=Gaibandha&wiki=Gaibandha%20District&division=Rangpur"}, {"label": "Thakurgaon", "sub": "Rangpur Division", "url": "district-detail.html?district=Thakurgaon&wiki=Thakurgaon%20District&division=Rangpur"}, {"label": "Panchagarh", "sub": "Rangpur Division", "url": "district-detail.html?district=Panchagarh&wiki=Panchagarh%20District&division=Rangpur"}, {"label": "Nilphamari", "sub": "Rangpur Division", "url": "district-detail.html?district=Nilphamari&wiki=Nilphamari%20District&division=Rangpur"}, {"label": "Lalmonirhat", "sub": "Rangpur Division", "url": "district-detail.html?district=Lalmonirhat&wiki=Lalmonirhat%20District&division=Rangpur"}, {"label": "Mymensingh", "sub": "Mymensingh Division", "url": "district-detail.html?district=Mymensingh&wiki=Mymensingh%20District&division=Mymensingh"}, {"label": "Jamalpur", "sub": "Mymensingh Division", "url": "district-detail.html?district=Jamalpur&wiki=Jamalpur%20District&division=Mymensingh"}, {"label": "Netrokona", "sub": "Mymensingh Division", "url": "district-detail.html?district=Netrokona&wiki=Netrokona%20District&division=Mymensingh"}, {"label": "Sherpur", "sub": "Mymensingh Division", "url": "district-detail.html?district=Sherpur&wiki=Sherpur%20District&division=Mymensingh"}, {"label": "Pohela Boishakh", "sub": "Culture topic", "url": "topic-detail.html?topic=Pohela%20Boishakh&wiki=Pohela%20Boishakh"}, {"label": "Food", "sub": "Culture topic", "url": "topic-detail.html?topic=Food&wiki=Bangladeshi%20cuisine"}, {"label": "Music", "sub": "Culture topic", "url": "topic-detail.html?topic=Music&wiki=Music%20of%20Bangladesh"}, {"label": "Dance", "sub": "Culture topic", "url": "topic-detail.html?topic=Dance&wiki=Dance%20in%20Bangladesh"}, {"label": "Clothing", "sub": "Culture topic", "url": "topic-detail.html?topic=Clothing&wiki=Bengali%20traditional%20dress"}, {"label": "Language & Literature", "sub": "Culture topic", "url": "topic-detail.html?topic=Language%20&%20Literature&wiki=Bengali%20language"}, {"label": "Festivals", "sub": "Culture topic", "url": "topic-detail.html?topic=Festivals&wiki=Public%20holidays%20in%20Bangladesh"}, {"label": "Arts & Crafts", "sub": "Culture topic", "url": "topic-detail.html?topic=Arts%20&%20Crafts&wiki=Nakshi%20kantha"}, {"label": "Sports", "sub": "Culture topic", "url": "topic-detail.html?topic=Sports&wiki=Sport%20in%20Bangladesh"}]
+;
+
+    const searchInput = document.getElementById('siteSearchInput');
+    const searchResults = document.getElementById('siteSearchResults');
+    let activeIndex = -1;
+    let currentMatches = [];
+
+    function renderResults(matches) {
+      currentMatches = matches;
+      activeIndex = -1;
+      if (matches.length === 0) {
+        searchResults.innerHTML = '<div class="site-search-empty">No matches found</div>';
+        searchResults.classList.add('open');
+        return;
+      }
+      searchResults.innerHTML = matches.slice(0, 8).map(function (m, i) {
+        return '<a class="site-search-result" data-index="' + i + '" href="' + m.url + '">' +
+          '<div class="r-label">' + m.label + '</div>' +
+          '<div class="r-sub">' + m.sub + '</div>' +
+        '</a>';
+      }).join('');
+      searchResults.classList.add('open');
+    }
+
+    function runSearch(query) {
+      const q = query.trim().toLowerCase();
+      if (!q) {
+        searchResults.classList.remove('open');
+        currentMatches = [];
+        return;
+      }
+      const matches = searchIndex.filter(function (item) {
+        return item.label.toLowerCase().includes(q) || item.sub.toLowerCase().includes(q);
+      });
+      // Items whose label starts with the query float to the top.
+      matches.sort(function (a, b) {
+        const aStarts = a.label.toLowerCase().startsWith(q) ? 0 : 1;
+        const bStarts = b.label.toLowerCase().startsWith(q) ? 0 : 1;
+        return aStarts - bStarts;
+      });
+      renderResults(matches);
+    }
+
+    if (searchInput) {
+      searchInput.addEventListener('input', function () {
+        runSearch(searchInput.value);
+      });
+
+      searchInput.addEventListener('keydown', function (e) {
+        const items = searchResults.querySelectorAll('.site-search-result');
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          if (items.length) {
+            activeIndex = (activeIndex + 1) % items.length;
+            items.forEach(function (el, i) { el.classList.toggle('active', i === activeIndex); });
+          }
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (items.length) {
+            activeIndex = (activeIndex - 1 + items.length) % items.length;
+            items.forEach(function (el, i) { el.classList.toggle('active', i === activeIndex); });
+          }
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          // Enter jumps straight to the highlighted result, or the best match if none is highlighted.
+          const target = activeIndex >= 0 ? currentMatches[activeIndex] : currentMatches[0];
+          if (target) {
+            window.location.href = target.url;
+          }
+        } else if (e.key === 'Escape') {
+          searchResults.classList.remove('open');
+          searchInput.blur();
+        }
+      });
+
+      // Close the dropdown when clicking elsewhere, but allow result clicks to register first.
+      document.addEventListener('click', function (e) {
+        if (!e.target.closest('.site-search')) {
+          searchResults.classList.remove('open');
+        }
+      });
+
+      searchInput.addEventListener('focus', function () {
+        if (searchInput.value.trim()) {
+          searchResults.classList.add('open');
+        }
+      });
+    }
+  </script>
+
+</body>
+</html>

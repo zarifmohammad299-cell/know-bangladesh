@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script>
+  (function () {
+    var saved = localStorage.getItem('bd-theme');
+    var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+  })();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Districts | Know Bangladesh</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🇧🇩</text></svg>">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --green: #006A4E;
+    --green-dark: #004d38;
+    --red: #F42A41;
+    --white: #ffffff;
+    --light-bg: #f4f7f6;
+    --text-dark: #1a1a1a;
+    --card-bg: #ffffff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-dark);
+    background: var(--light-bg);
+  }
+
+  h1, h2, h3, .logo { font-family: 'Orbitron', sans-serif; }
+
+  header {
+    background: var(--green);
+    color: var(--white);
+    padding: 12px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  }
+
+  .logo {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-circle { width: 16px; height: 16px; background: var(--red); border-radius: 50%; }
+
+  nav ul { list-style: none; display: flex; gap: 16px; }
+  nav a { color: var(--white); text-decoration: none; font-weight: 600; font-size: 0.82rem; transition: color 0.2s ease; }
+  nav a:hover { color: var(--red); }
+  nav a.active { color: var(--red); border-bottom: 2px solid var(--red); padding-bottom: 4px; }
+
+  .page-banner {
+    background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%);
+    color: var(--white);
+    text-align: center;
+    padding: 70px 20px;
+  }
+
+  .page-banner h1 { font-size: 2.6rem; font-weight: 900; letter-spacing: 1px; }
+  .page-banner p { margin-top: 12px; opacity: 0.9; font-size: 1.05rem; }
+
+  .content { max-width: 1000px; margin: 0 auto; padding: 60px 20px; }
+
+  /* ---------- Sticky detail panel (fills in when a district is clicked) ---------- */
+  .district-panel {
+    display: none;
+    background: var(--card-bg);
+    border: 2px solid var(--red);
+    border-radius: 12px;
+    padding: 26px 30px;
+    margin-bottom: 36px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    position: relative;
+  }
+
+  .district-panel h3 {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--green);
+    font-size: 1.3rem;
+    margin-bottom: 14px;
+  }
+
+  .district-panel p { color: #444; font-size: 0.95rem; line-height: 1.7; margin-bottom: 10px; }
+  .district-panel p:last-child { margin-bottom: 0; }
+  .district-panel b { color: var(--red); }
+
+  .close-panel {
+    position: absolute;
+    top: 14px;
+    right: 18px;
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    color: #999;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+  }
+  .close-panel:hover { color: var(--red); }
+
+  .division {
+    scroll-margin-top: 110px;
+    background: var(--card-bg);
+    border-left: 5px solid var(--red);
+    border-radius: 10px;
+    padding: 26px 30px;
+    margin-bottom: 22px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+  }
+
+  .division h3 { color: var(--green); font-size: 1.2rem; margin-bottom: 10px; }
+  .division p.desc { color: #444; font-size: 0.92rem; line-height: 1.6; margin-bottom: 14px; }
+
+  .district-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .district-tags button {
+    background: var(--light-bg);
+    border: 1px solid #ddd;
+    color: var(--text-dark);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+
+  .district-tags button:hover {
+    background: var(--green);
+    color: var(--white);
+    border-color: var(--green);
+  }
+
+  .district-tags button.has-data::after {
+    content: " ●";
+    color: var(--red);
+    font-size: 0.6rem;
+  }
+
+  footer {
+    background: var(--green-dark);
+    color: var(--white);
+    text-align: center;
+    padding: 26px 20px;
+    font-size: 0.85rem;
+  }
+
+  footer span { color: var(--red); font-weight: 600; }
+
+  @media (max-width: 600px) {
+    header { flex-direction: column; gap: 14px; padding: 16px;     .site-search { margin-left: 0; }
+    .site-search input, .site-search input:focus { width: 220px; }
+  }
+    nav ul { gap: 16px; flex-wrap: wrap; justify-content: center; }
+    .page-banner h1 { font-size: 1.9rem; }
+    .division { padding: 20px 18px; }
+    .district-panel { padding: 20px 20px; }
+  }
+
+  .site-search {
+    position: relative;
+    margin-left: 14px;
+  }
+
+  .site-search input {
+    width: 190px;
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.35);
+    background: rgba(255,255,255,0.15);
+    color: var(--white);
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.82rem;
+    outline: none;
+    transition: background 0.2s ease, width 0.2s ease;
+  }
+  .site-search input::placeholder { color: rgba(255,255,255,0.75); }
+  .site-search input:focus { background: rgba(255,255,255,0.25); width: 220px; }
+
+  .site-search-results {
+    display: none;
+    position: absolute;
+    top: 38px;
+    right: 0;
+    width: 280px;
+    max-height: 340px;
+    overflow-y: auto;
+    background: var(--card-bg);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    z-index: 200;
+  }
+  .site-search-results.open { display: block; }
+
+  .site-search-result {
+    display: block;
+    padding: 10px 14px;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    cursor: pointer;
+  }
+  .site-search-result:last-child { border-bottom: none; }
+  .site-search-result:hover, .site-search-result.active { background: var(--light-bg); }
+  .site-search-result .r-label { color: var(--text-dark); font-weight: 600; font-size: 0.88rem; }
+  .site-search-result .r-sub { color: #888; font-size: 0.72rem; margin-top: 2px; }
+
+  .site-search-empty {
+    padding: 14px;
+    color: #999;
+    font-size: 0.82rem;
+    text-align: center;
+  }
+
+  .theme-toggle {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: var(--white);
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease, transform 0.2s ease;
+    margin-left: 16px;
+  }
+  .theme-toggle:hover { background: rgba(255,255,255,0.3); transform: scale(1.08); }
+
+  [data-theme="dark"] {
+    --light-bg: #14181c;
+    --text-dark: #e8e8e8;
+    --card-bg: #1f2428;
+  }
+  [data-theme="dark"] .district-panel p,
+  [data-theme="dark"] .division p.desc { color: #b8bcc0; }
+  [data-theme="dark"] .close-panel { color: #8a8f93; }
+  [data-theme="dark"] .district-tags button { border-color: #3a3f43; }
+</style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+      <span class="logo-circle"></span>
+      KNOW BANGLADESH
+    </div>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="location.html">Location</a></li>
+        <li><a href="history.html">History</a></li>
+        <li><a href="culture.html">Culture</a></li>
+        <li><a href="districts.html" class="active">Districts</a></li>
+        <li><a href="tourism.html">Tourism</a></li>
+        <li><a href="education.html">Education</a></li>
+      </ul>
+    </nav>
+        <div class="site-search">
+      <input type="text" id="siteSearchInput" placeholder="Search History, Dhaka…" autocomplete="off">
+      <div id="siteSearchResults" class="site-search-results"></div>
+    </div>
+
+    <button id="themeToggle" class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">🌙</button>
+  </header>
+
+  <script>
+    function toggleTheme() {
+      var html = document.documentElement;
+      var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('bd-theme', next);
+      updateThemeIcon();
+    }
+    function updateThemeIcon() {
+      var btn = document.getElementById('themeToggle');
+      if (btn) btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
+    }
+    updateThemeIcon();
+  </script>
+
+
+  <section class="page-banner">
+    <h1>Districts of Bangladesh</h1>
+    <p>All 64 districts across 8 divisions — tap any district name to learn its culture, food, and economy</p>
+  </section>
+
+  <div class="content">
+
+    <!-- This panel fills in with details when a district button is clicked -->
+    <div class="district-panel" id="districtPanel">
+      <button class="close-panel" onclick="closePanel()">✕</button>
+      <h3 id="dpTitle">District Name</h3>
+      <div id="dpContent"></div>
+    </div>
+
+    <div class="division" id="div-dhaka">
+      <h3>Dhaka Division</h3>
+      <p class="desc">Home to Dhaka, the capital city of Bangladesh, and the country's political and economic center. 13 districts.</p>
+      <div class="district-tags">
+        <button class="has-data" onclick="openDistrictDetail('Dhaka', 'Dhaka District', 'Dhaka')">Dhaka</button>
+        <button class="has-data" onclick="openDistrictDetail('Gazipur', 'Gazipur District', 'Dhaka')">Gazipur</button>
+        <button class="has-data" onclick="openDistrictDetail('Narayanganj', 'Narayanganj District', 'Dhaka')">Narayanganj</button>
+        <button class="has-data" onclick="openDistrictDetail('Tangail', 'Tangail District', 'Dhaka')">Tangail</button>
+        <button class="has-data" onclick="openDistrictDetail('Faridpur', 'Faridpur District', 'Dhaka')">Faridpur</button>
+        <button class="has-data" onclick="openDistrictDetail('Manikganj', 'Manikganj District', 'Dhaka')">Manikganj</button>
+        <button class="has-data" onclick="openDistrictDetail('Munshiganj', 'Munshiganj District', 'Dhaka')">Munshiganj</button>
+        <button class="has-data" onclick="openDistrictDetail('Gopalganj', 'Gopalganj District', 'Dhaka')">Gopalganj</button>
+        <button class="has-data" onclick="openDistrictDetail('Kishoreganj', 'Kishoreganj District', 'Dhaka')">Kishoreganj</button>
+        <button class="has-data" onclick="openDistrictDetail('Madaripur', 'Madaripur District', 'Dhaka')">Madaripur</button>
+        <button class="has-data" onclick="openDistrictDetail('Narsingdi', 'Narsingdi District', 'Dhaka')">Narsingdi</button>
+        <button class="has-data" onclick="openDistrictDetail('Rajbari', 'Rajbari District', 'Dhaka')">Rajbari</button>
+        <button class="has-data" onclick="openDistrictDetail('Shariatpur', 'Shariatpur District', 'Dhaka')">Shariatpur</button>
+      </div>
+    </div>
+
+    <div class="division" id="div-chattogram">
+      <h3>Chattogram Division</h3>
+      <p class="desc">Known for the port city of Chattogram, the hill tracts, and the world's longest natural sea beach at Cox's Bazar. 11 districts.</p>
+      <div class="district-tags">
+        <button class="has-data" onclick="openDistrictDetail('Chattogram', 'Chattogram District', 'Chattogram')">Chattogram</button>
+        <button class="has-data" onclick="openDistrictDetail('Cox\'s Bazar', 'Cox\'s Bazar District', 'Chattogram')">Cox's Bazar</button>
+        <button class="has-data" onclick="openDistrictDetail('Cumilla', 'Cumilla District', 'Chattogram')">Cumilla</button>
+        <button class="has-data" onclick="openDistrictDetail('Brahmanbaria', 'Brahmanbaria District', 'Chattogram')">Brahmanbaria</button>
+        <button class="has-data" onclick="openDistrictDetail('Chandpur', 'Chandpur District', 'Chattogram')">Chandpur</button>
+        <button class="has-data" onclick="openDistrictDetail('Feni', 'Feni District', 'Chattogram')">Feni</button>
+        <button class="has-data" onclick="openDistrictDetail('Noakhali', 'Noakhali District', 'Chattogram')">Noakhali</button>
+        <button class="has-data" onclick="openDistrictDetail('Lakshmipur', 'Lakshmipur District', 'Chattogram')">Lakshmipur</button>
+        <button class="has-data" onclick="openDistrictDetail('Khagrachhari', 'Khagrachari District', 'Chattogram')">Khagrachhari</button>
+        <button class="has-data" onclick="openDistrictDetail('Rangamati', 'Rangamati District', 'Chattogram')">Rangamati</button>
+        <button class="has-data" onclick="openDistrictDetail('Bandarban', 'Bandarban District', 'Chattogram')">Bandarban</button>
+      </div>
+    </div>
+
+    <div class="division" id="div-rajshahi">
+      <h3>Rajshahi Division</h3>
+      <p class="desc">Famous for silk production, mango orchards, and historical sites. 8 districts.</p>
+      <div class="district-tags">
+        <button class="has-data" onclick="openDistrictDetail('Rajshahi', 'Rajshahi District', 'Rajshahi')">Rajshahi</button>
+        <button class="has-data" onclick="openDistrictDetail('Bogura', 'Bogra District', 'Rajshahi')">Bogura</button>
+        <button class="has-data" onclick="openDistrictDetail('Pabna', 'Pabna District', 'Rajshahi')">Pabna</button>
+        <button class="has-data" onclick="openDistrictDetail('Sirajganj', 'Sirajganj District', 'Rajshahi')">Sirajganj</button>
+        <button class="has-data" onclick="openDistrictDetail('Natore', 'Natore District', 'Rajshahi')">Natore</button>
+        <button class="has-data" onclick="openDistrictDetail('Naogaon', 'Naogaon District', 'Rajshahi')">Naogaon</button>
+        <button class="has-data" onclick="openDistrictDetail('Chapainawabganj', 'Chapai Nawabganj District', 'Rajshahi')">Chapainawabganj</button>
+        <button class="has-data" onclick="openDistrictDetail('Joypurhat', 'Joypurhat District', 'Rajshahi')">Joypurhat</button>
+      </div>
+    </div>
+
+    <div class="division" id="div-khulna">
+      <h3>Khulna Division</h3>
+      <p class="desc">Home to the Sundarbans, the largest mangrove forest in the world. 10 districts.</p>
+      <div class="district-tags">
+        <button class="has-data" onclick="openDistrictDetail('Khulna', 'Khulna District', 'Khulna')">Khulna</button>
+        <button class="has-data" onclick="openDistrictDetail('Jashore', 'Jessore District', 'Khulna')">Jashore</button>
+        <button class="has-data" onclick="openDistrictDetail('Satkhira', 'Satkhira District', 'Khulna')">Satkhira</button>
+        <button class="has-data" onclick="openDistrictDetail('Bagerhat', 'Bagerhat District', 'Khulna')">Bagerhat</button>
+        <button class="has-data" onclick="openDistrictDetail('Kushtia', 'Kushtia District', 'Khulna')">Kushtia</button>
+        <button class="has-data" onclick="openDistrictDetail('Jhenaidah', 'Jhenaidah District', 'Khulna')">Jhenaidah</button>
+        <button class="has-data" onclick="openDistrictDetail('Magura', 'Magura District', 'Khulna')">Magura</button>
+        <button class="has-data" onclick="openDistrictDetail('Narail', 'Narail District', 'Khulna')">Narail</button>
+        <button class="has-data" onclick="openDistrictDetail('Chuadanga', 'Chuadanga District', 'Khulna')">Chuadanga</button>
+        <button class="has-data" onclick="openDistrictDetail('Meherpur', 'Meherpur District', 'Khulna')">Meherpur</button>
+      </div>
+    </div>
+
+    <div class="division" id="div-barishal">
+      <h3>Barishal Division</h3>
+      <p class="desc">A region shaped by rivers and canals, known for floating markets. 6 districts.</p>
+      <div class="district-tags">
+        <button class="has-data" onclick="openDistrictDetail('Barishal', 'Barisal District', 'Barishal')">Barishal</button>
+        <button class="has-data" onclick="openDistrictDetail('Bhola', 'Bhola District', 'Barishal')">Bhola</button>
+        <button class="has-data" onclick="openDistrictDetail('Patuakhali', 'Patuakhali District', 'Barishal')">Patuakhali</button>
+        <button class="has-data" onclick="openDistrictDetail('Pirojpur', 'Pirojpur District', 'Barishal')">Pirojpur</button>
+        <button class="has-data" onclick="openDistrictDetail('Barguna', 'Barguna District', 'Barishal')">Barguna</button>
+        <button class="has-data" onclick="openDistrictDetail('Jhalokati', 'Jhalokati District', 'Barishal')">Jhalokati</button>
+      </div>
+    </div>
+
+    <div class="division" id="div-sylhet">
+      <h3>Sylhet Division</h3>
+      <p class="desc">Known for its tea gardens and hilly landscapes in the northeast. 4 districts.</p>
+      <div class="district-tags">
+        <button class="has-data" onclick="openDistrictDetail('Sylhet', 'Sylhet District', 'Sylhet')">Sylhet</button>
+        <button class="has-data" onclick="openDistrictDetail('Moulvibazar', 'Moulvibazar District', 'Sylhet')">Moulvibazar</button>
+        <button class="has-data" onclick="openDistrictDetail('Habiganj', 'Habiganj District', 'Sylhet')">Habiganj</button>
+        <button class="has-data" onclick="openDistrictDetail('Sunamganj', 'Sunamganj District', 'Sylhet')">Sunamganj</button>
+      </div>
+    </div>
+
+    <div class="division" id="div-rangpur">
+      <h3>Rangpur Division</h3>
+      <p class="desc">An agricultural region in the north. 8 districts.</p>
+      <div class="district-tags">
+        <button class="has-data" onclick="openDistrictDetail('Rangpur', 'Rangpur District', 'Rangpur')">Rangpur</button>
+        <button class="has-data" onclick="openDistrictDetail('Dinajpur', 'Dinajpur District', 'Rangpur')">Dinajpur</button>
+        <button class="has-data" onclick="openDistrictDetail('Kurigram', 'Kurigram District', 'Rangpur')">Kurigram</button>
+        <button class="has-data" onclick="openDistrictDetail('Gaibandha', 'Gaibandha District', 'Rangpur')">Gaibandha</button>
+        <button class="has-data" onclick="openDistrictDetail('Thakurgaon', 'Thakurgaon District', 'Rangpur')">Thakurgaon</button>
+        <button class="has-data" onclick="openDistrictDetail('Panchagarh', 'Panchagarh District', 'Rangpur')">Panchagarh</button>
+        <button class="has-data" onclick="openDistrictDetail('Nilphamari', 'Nilphamari District', 'Rangpur')">Nilphamari</button>
+        <button class="has-data" onclick="openDistrictDetail('Lalmonirhat', 'Lalmonirhat District', 'Rangpur')">Lalmonirhat</button>
+      </div>
+    </div>
+
+    <div class="division" id="div-mymensingh">
+      <h3>Mymensingh Division</h3>
+      <p class="desc">Bangladesh's newest division. 4 districts.</p>
+      <div class="district-tags">
+        <button class="has-data" onclick="openDistrictDetail('Mymensingh', 'Mymensingh District', 'Mymensingh')">Mymensingh</button>
+        <button class="has-data" onclick="openDistrictDetail('Jamalpur', 'Jamalpur District', 'Mymensingh')">Jamalpur</button>
+        <button class="has-data" onclick="openDistrictDetail('Netrokona', 'Netrokona District', 'Mymensingh')">Netrokona</button>
+        <button class="has-data" onclick="openDistrictDetail('Sherpur', 'Sherpur District', 'Mymensingh')">Sherpur</button>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <span>Know Bangladesh</span> — A project showcasing the beauty and heritage of Bangladesh.
+© 2026. All rights reserved.
+  </footer>
+
+  <script>
+    // Each district's real Culture / Food / Economy info.
+    // More divisions will be added here as they get researched.
+    const districtData = {
+      "Dhaka": {
+        culture: "The political, cultural, and historic heart of Bangladesh, home to Dhaka University, the National Museum, and centuries-old Mughal architecture like Lalbagh Fort.",
+        food: "Famous for Kacchi Biryani (slow-cooked meat, rice, and spices) and Borhani, a spiced yogurt drink served at celebrations.",
+        economy: "The country's biggest hub for garments manufacturing, trade, banking, and government offices — the densest and most populated district in Bangladesh."
+      },
+      "Gazipur": {
+        culture: "Home to Bhawal National Park and the historic Bhawal Rajbari (palace); hosts Bishwa Ijtema, one of the largest Muslim gatherings in the world.",
+        food: "Known for kathal (jackfruit) and guava grown in its orchards.",
+        economy: "One of the country's largest industrial zones, packed with garment factories that supply clothing worldwide."
+      },
+      "Narayanganj": {
+        culture: "Historically nicknamed the \"Dundee of the East\" for its river port and trading history along the Shitalakshya River.",
+        food: "Known for its street food culture and traditional Bengali sweets sold in old river-side markets.",
+        economy: "A major center for jute processing, textiles, and river trade, thanks to its port on the Shitalakshya River."
+      },
+      "Tangail": {
+        culture: "Home to the famous handwoven Tangail Saree, a traditional cotton/silk garment recognized nationwide, plus the historic Atia Mosque (1608).",
+        food: "Known for Chomchom, a soft, syrupy sweet considered one of Bangladesh's most famous desserts.",
+        economy: "Agriculture (rice, jute, sugarcane, pineapples) alongside a large handloom weaving industry."
+      },
+      "Faridpur": {
+        culture: "Named after Sufi saint Shah Sheikh Fariuddin; birthplace of poet Jasimuddin, known as the \"Palli Kobi\" (poet of the villages).",
+        food: "Famous for date molasses (patali gur), a traditional sweetener made from date palm sap in winter.",
+        economy: "Mainly agricultural, growing rice, jute, and date palm trees for molasses production."
+      },
+      "Manikganj": {
+        culture: "A riverside district along the Padma and Jamuna rivers, known for its rural fairs and folk traditions.",
+        food: "Well known for date molasses (khejur gur), harvested from local date palm trees.",
+        economy: "Agriculture-based, with rice and date palm farming as major activities."
+      },
+      "Munshiganj": {
+        culture: "Historically known as Bikrampur, once the political and cultural capital of ancient Bengal under several dynasties.",
+        food: "Known for a variety of traditional sweets, and being one of the first places in Bangladesh to grow potatoes, starting in 1778.",
+        economy: "A leading potato-farming district, plus river transport and fishing along the Padma and Meghna rivers."
+      },
+      "Gopalganj": {
+        culture: "The birthplace of Sheikh Mujibur Rahman (Bangabandhu), founder of Bangladesh — his memorial and family home are here, along the Madhumati River.",
+        food: "Known for local sweets and fish dishes from the Madhumati River.",
+        economy: "Agriculture and fishing, along with tourism linked to Bangabandhu's memorial complex."
+      },
+      "Kishoreganj": {
+        culture: "Famous for its haor (wetland) areas that flood seasonally, creating a unique landscape of \"rivers\" across farmland in the monsoon.",
+        food: "Known for Balish Mishti (\"pillow sweet\"), a soft, oversized sweet shaped like a small pillow.",
+        economy: "Fishing and rice farming in the haor wetlands are central to the local economy."
+      },
+      "Madaripur": {
+        culture: "A riverside district known for its many mosques, shrines, and traditional boat culture.",
+        food: "Famous for date jaggery (patali gur) and Rasgolla, a soft syrup-soaked sweet.",
+        economy: "Agriculture, especially jute and date-palm farming."
+      },
+      "Narsingdi": {
+        culture: "Known as a growing industrial town close to Dhaka, with a mix of traditional and modern lifestyles.",
+        food: "Famous for Sagar Kola, a popular local variety of banana grown in the district.",
+        economy: "A major center for textile and weaving industries in Bangladesh."
+      },
+      "Rajbari": {
+        culture: "A small riverside district along the Padma River, known for its ferry ghats and rural charm.",
+        food: "Known for Chamcham sweets and date molasses.",
+        economy: "Agriculture and river-based trade, including ferry transport across the Padma."
+      },
+      "Shariatpur": {
+        culture: "A river-crossed district known for its traditional dessert Bibikhana Pitha, a rich cake-like sweet made for special occasions.",
+        food: "Known for jute, ginger, onion, and tomato farming, alongside its signature Bibikhana Pitha.",
+        economy: "Agriculture-based, with jute and vegetable farming as key activities."
+      },
+      "Chattogram": {
+        culture: "A historic hill-and-port city, culturally distinct with its own dialect, and home to the famous \"Mezban\" feast tradition of serving spicy beef curry to guests.",
+        food: "Famous for Mezbani beef and Kala Bhuna, rich, dark, slow-cooked meat dishes served at community feasts.",
+        economy: "Home to the Port of Chattogram, which handles about 90% of Bangladesh's international trade — the country's main gateway for shipping and export industries."
+      },
+      "Cox's Bazar": {
+        culture: "Home to the world's longest natural sea beach, plus a mix of Bengali and indigenous Rakhine coastal communities.",
+        food: "Known for fresh seafood and shutki (sun-dried fish), a coastal specialty.",
+        economy: "Tourism is the biggest driver, along with fishing and salt production along the coast."
+      },
+      "Cumilla": {
+        culture: "One of the oldest civilized regions of Bengal, home to the ancient Buddhist ruins of Mainamati and Shalvan Vihara.",
+        food: "Famous nationwide for Rasmalai, a soft cheese dessert soaked in sweetened, thickened milk.",
+        economy: "Agriculture and khadi (handspun cotton cloth) production, plus a growing industrial base."
+      },
+      "Brahmanbaria": {
+        culture: "Known as the home region of Ustad Alauddin Khan, a legendary Bengali classical musician, giving the district a strong musical heritage.",
+        food: "Known for its rice and traditional Bengali home cooking.",
+        economy: "Agriculture, along with natural gas fields located in the district."
+      },
+      "Chandpur": {
+        culture: "Called the \"Hilsa Capital\" of Bangladesh, sitting where the Padma and Meghna rivers meet.",
+        food: "Famous nationwide for Ilish (hilsa fish), Bangladesh's national fish, caught fresh from the rivers here.",
+        economy: "Fishing is central to the economy, especially the hilsa fishing industry, alongside river trade."
+      },
+      "Feni": {
+        culture: "A relatively small district known for its strong ties to expatriate communities working abroad.",
+        food: "Known for local sweets and traditional Bengali dishes.",
+        economy: "Heavily supported by remittances from residents working overseas, plus agriculture."
+      },
+      "Noakhali": {
+        culture: "Known for its distinct \"Noakhailla\" dialect of Bangla and coastal \"char\" lands formed by river silt.",
+        food: "Known for coastal seafood dishes and traditional rice-based meals.",
+        economy: "Agriculture and fishing on newly formed coastal char lands."
+      },
+      "Lakshmipur": {
+        culture: "A coastal district along the Meghna River, sharing cultural ties with neighboring Noakhali and Chandpur.",
+        food: "Known for river fish dishes, especially from the Meghna River.",
+        economy: "Agriculture and fishing, with rice as a major crop."
+      },
+      "Khagrachhari": {
+        culture: "Part of the Chittagong Hill Tracts, home to indigenous communities including the Chakma, Marma, and Tripura peoples with their own languages and traditions.",
+        food: "Known for bamboo shoot dishes and tribal cuisine cooked using traditional hill methods.",
+        economy: "Jhum (slash-and-burn) farming, fruit growing, and increasingly, tourism to its hills and caves."
+      },
+      "Rangamati": {
+        culture: "The largest of the three hill districts, centered around Kaptai Lake, with a rich indigenous Chakma culture and traditional handwoven textiles.",
+        food: "Known for bamboo-cooked chicken and fresh fish from Kaptai Lake.",
+        economy: "Fishing and hydroelectric power generation from Kaptai Dam, plus growing tourism."
+      },
+      "Bandarban": {
+        culture: "Home to several indigenous groups including the Marma, Bawm, and Mru peoples, each with distinct traditions and hill village life.",
+        food: "Tribal cuisine cooked in bamboo, along with tropical fruits like banana, pineapple, and jackfruit.",
+        economy: "Jhum farming, hand-woven textiles, and fast-growing tourism to its hills and waterfalls."
+      },
+      "Rajshahi": {
+        culture: "An ancient city in the Pundravardhana region with a thousand-year history, home to Varendra Research Museum and known as Bangladesh's Silk City.",
+        food: "Famous nationwide for its mangoes and litchis, plus Kalai Roti (lentil flatbread) served with eggplant or duck curry.",
+        economy: "Mango orchards, silk weaving, and agriculture (rice, sugarcane) drive the local economy."
+      },
+      "Bogura": {
+        culture: "Home to Mahasthangarh, one of the earliest urban archaeological sites in Bengal, dating back to the 3rd century BC.",
+        food: "Nationally famous for its Doi (sweet yogurt), sold in clay pots and considered among the best in the country.",
+        economy: "Known as the \"gateway to North Bengal\" for trade, with strong agriculture and food-processing industries."
+      },
+      "Pabna": {
+        culture: "Part of the ancient Pundravardhana region, with historic mosques and temples dating back centuries.",
+        food: "Known for local sweets and traditional North Bengal dishes like khichuri.",
+        economy: "One of the more industrialized districts in the region, home to the Ishwardi Export Processing Zone, pharmaceutical factories, and sugar and textile mills."
+      },
+      "Sirajganj": {
+        culture: "A river-side district along the Jamuna, historically part of greater Pabna before becoming its own district.",
+        food: "Known for traditional North Bengal cuisine, including kalai roti and river fish dishes.",
+        economy: "Considered one of Bangladesh's economically important districts, with textile mills and trade along the Jamuna River."
+      },
+      "Natore": {
+        culture: "Famous for its 18th and 19th century zamindar (landlord) palaces, including the Rani Bhabani Rajbari and Uttara Ganabhaban.",
+        food: "Known for local sweets and dishes tied to its sugar-producing economy.",
+        economy: "Agriculture-based, with sugar mills, rice milling, and growing food-processing industries."
+      },
+      "Naogaon": {
+        culture: "Home to Somapura Mahavihara (Paharpur), a UNESCO World Heritage Site and one of the most important Buddhist monasteries in South Asia.",
+        food: "Known for rice-based dishes, as one of the region's major paddy-growing areas.",
+        economy: "Often called part of Bangladesh's \"rice bowl,\" with agriculture as the dominant industry."
+      },
+      "Chapainawabganj": {
+        culture: "A border district next to India, historically tied to the old Malda region, known for its distinct dialect and Mughal-era architecture.",
+        food: "Famous as one of Bangladesh's top mango-producing districts, with dozens of local mango varieties.",
+        economy: "Mango orchards and agriculture are central, along with border trade with India."
+      },
+      "Joypurhat": {
+        culture: "One of the smallest districts by area, with a mix of Bengali and Santal indigenous communities.",
+        food: "Known for local rice and sweets typical of the wider Rajshahi region.",
+        economy: "Agriculture and sugar milling, along with nearby limestone and coal resources in the region."
+      },
+      "Khulna": {
+        culture: "Bangladesh's third-largest city and gateway to the Sundarbans, with a long history as a jute-industry hub during British and Pakistani rule.",
+        food: "Known for shutki (dried fish) and fresh shrimp and crab dishes from the surrounding delta.",
+        economy: "Shipbuilding, jute mills, and shrimp/prawn farming, supported by the nearby Mongla seaport."
+      },
+      "Jashore": {
+        culture: "Birthplace of poet Michael Madhusudan Dutt; known as the \"flower capital\" of Bangladesh thanks to its Gadkhali flower markets.",
+        food: "Known for its sweets and traditional Bengali dishes tied to its agricultural surroundings.",
+        economy: "Flower farming (a major national supplier), agriculture, and a growing airport-linked trade hub."
+      },
+      "Satkhira": {
+        culture: "A coastal district bordering India, sharing the Sundarbans mangrove forest with Khulna and Bagerhat.",
+        food: "Famous for wild honey collected from the Sundarbans and fresh shrimp dishes.",
+        economy: "Shrimp (bagda) farming, honey collection, and agriculture are the main economic activities."
+      },
+      "Bagerhat": {
+        culture: "Home to the Sixty Dome Mosque (Shatgombuj Mosque), a UNESCO World Heritage Site built by 15th-century Turkish general Khan Jahan Ali.",
+        food: "Known for shrimp and fish curries, drawing on its location near the Sundarbans.",
+        economy: "Shrimp and prawn cultivation, fishing, and tourism tied to its historic mosques and the Sundarbans."
+      },
+      "Kushtia": {
+        culture: "Home to the shrine of Lalon Shah, the mystic Baul philosopher and songwriter, and Kuthibari, where Rabindranath Tagore once lived and wrote.",
+        food: "Known for local sweets and dishes tied to its strong folk and Baul music culture during festivals.",
+        economy: "Agriculture, tobacco processing, and textiles, with cultural tourism around the Lalon Shah shrine."
+      },
+      "Jhenaidah": {
+        culture: "A quieter agricultural district known for its sugar industry and rural traditions.",
+        food: "Known for sweets made using locally produced sugar.",
+        economy: "Sugar milling (Mobarakganj Sugar Mills) and agriculture form the backbone of the local economy."
+      },
+      "Magura": {
+        culture: "A small, historic district with rural fairs and traditional Bengali village culture.",
+        food: "Known for local sweets and traditional home-style Bengali cooking.",
+        economy: "Agriculture-based, with rice and jute as key crops."
+      },
+      "Narail": {
+        culture: "Birthplace of renowned painter S. M. Sultan, known for his bold depictions of rural Bengali life; also known for traditional boat racing.",
+        food: "Known for fish dishes from the Chitra River that runs through the district.",
+        economy: "Agriculture and fishing, with a growing focus on cultural tourism linked to S. M. Sultan's legacy."
+      },
+      "Chuadanga": {
+        culture: "Known as one of the hottest districts in Bangladesh, often recording the country's highest temperatures in summer.",
+        food: "Known for local produce-based dishes suited to its dry, warm climate.",
+        economy: "Agriculture, particularly tobacco and seasonal crops, along with border trade with India."
+      },
+      "Meherpur": {
+        culture: "Historically significant as the site of Mujibnagar, where Bangladesh's first provisional government was formed and sworn in on 17 April 1971.",
+        food: "Known for local sweets and traditional Bengali dishes.",
+        economy: "Agriculture-based, with a growing focus on Mujibnagar-related historical tourism."
+      },
+      "Barishal": {
+        culture: "Known as the \"Granary of Bengal\" for its rice production, with a long history as a major river port linking Dhaka and Kolkata.",
+        food: "Known for fresh river fish, especially hilsa, and traditional rice-based Bengali meals.",
+        economy: "Rice farming and trade, river transport, plus small bakery, textile, and pharmaceutical industries."
+      },
+      "Bhola": {
+        culture: "The largest island district in Bangladesh, shaped by the Meghna River delta, including the scenic Monpura Island.",
+        food: "Known for fresh fish and seafood from its surrounding rivers and coastline.",
+        economy: "Agriculture (rice, vegetables) and fishing are the main economic activities."
+      },
+      "Patuakhali": {
+        culture: "Known as the \"Gateway to Kuakata,\" home to an 18km beach nicknamed the \"daughter of the sea\" where you can watch both sunrise and sunset.",
+        food: "Known for fresh seafood and coastal Bengali dishes.",
+        economy: "Agriculture (rice, fish) and a growing tourism industry centered on Kuakata beach."
+      },
+      "Pirojpur": {
+        culture: "A green, canal-crossed district with a strong agricultural tradition and orchard-based rural life.",
+        food: "Known for dishes using betel leaf, coconut, and local fruits grown in the district.",
+        economy: "Agriculture, especially betel leaf, coconut, and fruit farming."
+      },
+      "Barguna": {
+        culture: "A coastal district along the Bay of Bengal, with a strong fishing community and river-crossed geography.",
+        food: "Known for fresh marine fish and shrimp, plus betel leaf and betel nut dishes.",
+        economy: "Fishing is a major industry here, along with agriculture (rice, pulses, betel leaf, bananas)."
+      },
+      "Jhalokati": {
+        culture: "Famous for its floating guava markets on the rivers at Atghar-Kuriana, where farmers sell fruit directly from boats.",
+        food: "Known nationwide for its guava, sold fresh at floating markets during harvest season.",
+        economy: "Guava orchards and river-based trade are central to the local economy."
+      },
+      "Sylhet": {
+        culture: "Named after Sufi saint Shah Jalal, whose shrine here is one of the most visited religious sites in Bangladesh; home to the Ratargul Swamp Forest and a large diaspora community in the UK.",
+        food: "Known for distinctive Sylheti cuisine, often featuring shutki (dried fish) and unique spice blends different from the rest of Bangladesh.",
+        economy: "Tea plantations, natural gas fields, and heavy remittance income from Sylhetis working abroad, especially in the UK."
+      },
+      "Moulvibazar": {
+        culture: "Known as the \"Tea Capital of Bangladesh,\" home to over 150 tea gardens plus indigenous Khasi, Manipuri, and Tripuri communities with their own traditions and dance forms.",
+        food: "Famous for Sreemangal's seven-layer tea, a specialty drink with visibly separated colored layers in one glass.",
+        economy: "Tea gardens dominate the economy, alongside agriculture like lemons, pineapples, rubber, and agarwood."
+      },
+      "Habiganj": {
+        culture: "A haor (wetland) and tea-growing district, home to the Rema-Kalenga Wildlife Sanctuary, one of Bangladesh's oldest nature reserves.",
+        food: "Known for panta bhat (fermented rice) served with fried fish, reflecting its haor-village food traditions.",
+        economy: "Agriculture (rice, tea, rubber, jute) plus natural gas extraction from local gas fields."
+      },
+      "Sunamganj": {
+        culture: "Famous for its vast haor wetlands, including part of Tanguar Haor, one of Asia's most important wetland ecosystems.",
+        food: "Known for fresh fish dishes sourced from its many haors and rivers.",
+        economy: "Fishing and rice farming in the seasonal wetlands are the main economic activities."
+      },
+      "Rangpur": {
+        culture: "Part of the ancient Pundra kingdom, later ruled by the Mughals; the region's traditional handwoven Shatranji rugs are a notable craft.",
+        food: "Known for North Bengal specialties like pelka (leafy green soup) and traditional rice dishes.",
+        economy: "Agriculture (tobacco, potato, maize) is central, with the district historically known for seasonal hardship (monga) though conditions have improved significantly in recent years."
+      },
+      "Dinajpur": {
+        culture: "Home to the ornate terracotta Kantajew Temple and the historic Dinajpur Rajbari (palace).",
+        food: "Famous nationwide for its lychees (lichu) and mangoes, plus the fragrant Katari Bhog rice variety.",
+        economy: "Agriculture (lychee, mango, rice) alongside coal mining at the Barapukuria Coal Mine, one of Bangladesh's only coal fields."
+      },
+      "Kurigram": {
+        culture: "Still bears marks of Mughal rule in place names like Mughalbasa and Mughalhat, shaped today by numerous river chars (sandbar islands).",
+        food: "Known for traditional North Bengal dishes and dried fish.",
+        economy: "Agriculture on river char lands, though the district faces regular challenges from river erosion and flooding."
+      },
+      "Gaibandha": {
+        culture: "A riverine district shaped by the Brahmaputra and Teesta rivers, with many seasonal char (sandbar) settlements.",
+        food: "Known for river fish dishes and rice-based North Bengal cuisine.",
+        economy: "Agriculture and fishing on fertile char lands along its rivers."
+      },
+      "Thakurgaon": {
+        culture: "A rural agricultural district in Bangladesh's far north, with a mix of Bengali and indigenous Santal communities.",
+        food: "Known for traditional North Bengal dishes like kalai roti and seasonal vegetable curries.",
+        economy: "Agriculture, particularly rice and tobacco farming, is the main economic activity."
+      },
+      "Panchagarh": {
+        culture: "The northernmost district of Bangladesh, near where India, Nepal, and Bhutan almost meet, with views of the Himalayas on clear days.",
+        food: "Known for locally grown tea, part of Bangladesh's newer northern tea belt.",
+        economy: "Tea cultivation (a fast-growing industry here) plus stone collection from riverbeds near the Indian border."
+      },
+      "Nilphamari": {
+        culture: "Home to Saidpur, a historic railway town built by the British, and Nilsagar, a large ornamental lake.",
+        food: "The birthplace of pelka, a traditional leafy-green soup now popular across North Bengal.",
+        economy: "Agriculture plus a legacy railway workshop industry centered in Saidpur."
+      },
+      "Lalmonirhat": {
+        culture: "Historically known for its border enclaves with India, including the famous Tin Bigha Corridor connecting Bangladeshi land across Indian territory.",
+        food: "Known for traditional North Bengal dishes similar to its neighboring districts.",
+        economy: "Agriculture-based, with rice and tobacco as key crops."
+      },
+      "Mymensingh": {
+        culture: "One of Bangladesh's oldest districts, home to Bangladesh Agricultural University and the historic Muktagachha Zamindar Bari (palace).",
+        food: "Famous for Muktagachha Monda, a Geographical Indication (GI)-recognized sweet unique to the district.",
+        economy: "Agriculture (jute, rice, wheat) and a growing textile industry with factories across the division."
+      },
+      "Jamalpur": {
+        culture: "Known for its handloom traditions, especially Nakshi Kantha (embroidered quilts) and Gamcha (traditional cotton towels).",
+        food: "An important regional market for rice, sugarcane, jute, and mustard, reflected in its hearty local dishes.",
+        economy: "Agriculture-based, with a new Jamalpur Economic Zone being developed to attract agro-based and food-processing industries."
+      },
+      "Netrokona": {
+        culture: "Home to indigenous Garo and Hajong communities, especially around Birishiri, known for its colorful China Clay Hills and Someshwari River.",
+        food: "Famous for Balish Mishti (\"pillow sweet\") and Goja, plus indigenous Garo dishes like Nakam (dried fish with bamboo shoots).",
+        economy: "Agriculture and haor (wetland) fishing, with growing eco-tourism around Birishiri."
+      },
+      "Sherpur": {
+        culture: "Home to Garo and Hajong indigenous communities in its northern hills near Nalitabari and Jhenaigati.",
+        food: "Known for Chanar Payesh (a sweet cheese pudding) and Tulsimala, a fragrant local rice variety, both officially GI-recognized.",
+        economy: "Agriculture, especially fragrant rice farming, along with small-scale hill produce from its indigenous communities."
+      }
+    };
+
+    function openDistrictDetail(districtName, wikiTitle, divisionName) {
+      const url = 'district-detail.html?district=' + encodeURIComponent(districtName) +
+        '&wiki=' + encodeURIComponent(wikiTitle) +
+        '&division=' + encodeURIComponent(divisionName);
+      window.open(url, '_blank');
+    }
+
+    function showDistrict(name) {
+      const d = districtData[name];
+      const panel = document.getElementById('districtPanel');
+      const title = document.getElementById('dpTitle');
+      const content = document.getElementById('dpContent');
+
+      title.textContent = name;
+
+      if (d) {
+        content.innerHTML =
+          '<p><b>Culture:</b> ' + d.culture + '</p>' +
+          '<p><b>Food:</b> ' + d.food + '</p>' +
+          '<p><b>Economy:</b> ' + d.economy + '</p>';
+      } else {
+        content.innerHTML = '<p>Details for this district are coming soon!</p>';
+      }
+
+      panel.style.display = 'block';
+      panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function closePanel() {
+      document.getElementById('districtPanel').style.display = 'none';
+    }
+
+    // Handles the ?d= and ?div= query params. Runs on normal load AND on
+    // bfcache restores (e.g. clicking back), so stale panel state never
+    // lingers and covers the section you actually navigated to.
+    function handlePageParams() {
+      const params = new URLSearchParams(window.location.search);
+      const requested = params.get('d');
+      const requestedDiv = params.get('div');
+
+      // ALWAYS force the panel closed first, no matter what. If a district
+      // was requested, showDistrict() below will reopen it correctly.
+      const panelEl = document.getElementById('districtPanel');
+      if (panelEl) {
+        panelEl.style.display = 'none';
+      }
+
+      if (requested) {
+        showDistrict(requested);
+        return; // showing a single district takes priority; skip division scroll
+      }
+
+      if (requestedDiv) {
+        // Jump to the very top first so the scroll below always starts
+        // from a known position, instead of wherever the page happened to be.
+        window.scrollTo(0, 0);
+
+        const target = document.getElementById('div-' + requestedDiv.toLowerCase());
+        if (target) {
+          target.style.transition = 'box-shadow 0.4s ease';
+          setTimeout(() => {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            target.style.boxShadow = '0 0 0 4px var(--red)';
+            setTimeout(() => { target.style.boxShadow = ''; }, 2000);
+          }, 150);
+        }
+      }
+    }
+
+    // Run immediately on normal page load...
+    handlePageParams();
+
+    // ...and again if the page is restored from the browser's back/forward
+    // cache (e.g. pressing the back button), since scripts don't always
+    // re-run automatically in that case.
+    window.addEventListener('pageshow', function (event) {
+      if (event.persisted) {
+        handlePageParams();
+      }
+    });
+  </script>
+
+  <script>
+    // Site-wide search index: pages, divisions, districts, and culture topics.
+    const searchIndex = [{"label": "Home", "sub": "Homepage", "url": "index.html"}, {"label": "Location", "sub": "Where Bangladesh is in the world", "url": "location.html"}, {"label": "History", "sub": "Timeline of Bangladesh", "url": "history.html"}, {"label": "Culture", "sub": "Festivals, food, music & more", "url": "culture.html"}, {"label": "Districts", "sub": "All 64 districts", "url": "districts.html"}, {"label": "Tourism", "sub": "Places to visit", "url": "tourism.html"}, {"label": "Education", "sub": "Schools & universities", "url": "education.html"}, {"label": "Dhaka Division", "sub": "Division", "url": "districts.html?div=Dhaka"}, {"label": "Chattogram Division", "sub": "Division", "url": "districts.html?div=Chattogram"}, {"label": "Rajshahi Division", "sub": "Division", "url": "districts.html?div=Rajshahi"}, {"label": "Khulna Division", "sub": "Division", "url": "districts.html?div=Khulna"}, {"label": "Barishal Division", "sub": "Division", "url": "districts.html?div=Barishal"}, {"label": "Sylhet Division", "sub": "Division", "url": "districts.html?div=Sylhet"}, {"label": "Rangpur Division", "sub": "Division", "url": "districts.html?div=Rangpur"}, {"label": "Mymensingh Division", "sub": "Division", "url": "districts.html?div=Mymensingh"}, {"label": "Dhaka", "sub": "Dhaka Division", "url": "district-detail.html?district=Dhaka&wiki=Dhaka%20District&division=Dhaka"}, {"label": "Gazipur", "sub": "Dhaka Division", "url": "district-detail.html?district=Gazipur&wiki=Gazipur%20District&division=Dhaka"}, {"label": "Narayanganj", "sub": "Dhaka Division", "url": "district-detail.html?district=Narayanganj&wiki=Narayanganj%20District&division=Dhaka"}, {"label": "Tangail", "sub": "Dhaka Division", "url": "district-detail.html?district=Tangail&wiki=Tangail%20District&division=Dhaka"}, {"label": "Faridpur", "sub": "Dhaka Division", "url": "district-detail.html?district=Faridpur&wiki=Faridpur%20District&division=Dhaka"}, {"label": "Manikganj", "sub": "Dhaka Division", "url": "district-detail.html?district=Manikganj&wiki=Manikganj%20District&division=Dhaka"}, {"label": "Munshiganj", "sub": "Dhaka Division", "url": "district-detail.html?district=Munshiganj&wiki=Munshiganj%20District&division=Dhaka"}, {"label": "Gopalganj", "sub": "Dhaka Division", "url": "district-detail.html?district=Gopalganj&wiki=Gopalganj%20District&division=Dhaka"}, {"label": "Kishoreganj", "sub": "Dhaka Division", "url": "district-detail.html?district=Kishoreganj&wiki=Kishoreganj%20District&division=Dhaka"}, {"label": "Madaripur", "sub": "Dhaka Division", "url": "district-detail.html?district=Madaripur&wiki=Madaripur%20District&division=Dhaka"}, {"label": "Narsingdi", "sub": "Dhaka Division", "url": "district-detail.html?district=Narsingdi&wiki=Narsingdi%20District&division=Dhaka"}, {"label": "Rajbari", "sub": "Dhaka Division", "url": "district-detail.html?district=Rajbari&wiki=Rajbari%20District&division=Dhaka"}, {"label": "Shariatpur", "sub": "Dhaka Division", "url": "district-detail.html?district=Shariatpur&wiki=Shariatpur%20District&division=Dhaka"}, {"label": "Chattogram", "sub": "Chattogram Division", "url": "district-detail.html?district=Chattogram&wiki=Chattogram%20District&division=Chattogram"}, {"label": "Cox's Bazar", "sub": "Chattogram Division", "url": "district-detail.html?district=Cox%27s%20Bazar&wiki=Cox%27s%20Bazar%20District&division=Chattogram"}, {"label": "Cumilla", "sub": "Chattogram Division", "url": "district-detail.html?district=Cumilla&wiki=Cumilla%20District&division=Chattogram"}, {"label": "Brahmanbaria", "sub": "Chattogram Division", "url": "district-detail.html?district=Brahmanbaria&wiki=Brahmanbaria%20District&division=Chattogram"}, {"label": "Chandpur", "sub": "Chattogram Division", "url": "district-detail.html?district=Chandpur&wiki=Chandpur%20District&division=Chattogram"}, {"label": "Feni", "sub": "Chattogram Division", "url": "district-detail.html?district=Feni&wiki=Feni%20District&division=Chattogram"}, {"label": "Noakhali", "sub": "Chattogram Division", "url": "district-detail.html?district=Noakhali&wiki=Noakhali%20District&division=Chattogram"}, {"label": "Lakshmipur", "sub": "Chattogram Division", "url": "district-detail.html?district=Lakshmipur&wiki=Lakshmipur%20District&division=Chattogram"}, {"label": "Khagrachhari", "sub": "Chattogram Division", "url": "district-detail.html?district=Khagrachhari&wiki=Khagrachari%20District&division=Chattogram"}, {"label": "Rangamati", "sub": "Chattogram Division", "url": "district-detail.html?district=Rangamati&wiki=Rangamati%20District&division=Chattogram"}, {"label": "Bandarban", "sub": "Chattogram Division", "url": "district-detail.html?district=Bandarban&wiki=Bandarban%20District&division=Chattogram"}, {"label": "Rajshahi", "sub": "Rajshahi Division", "url": "district-detail.html?district=Rajshahi&wiki=Rajshahi%20District&division=Rajshahi"}, {"label": "Bogura", "sub": "Rajshahi Division", "url": "district-detail.html?district=Bogura&wiki=Bogra%20District&division=Rajshahi"}, {"label": "Pabna", "sub": "Rajshahi Division", "url": "district-detail.html?district=Pabna&wiki=Pabna%20District&division=Rajshahi"}, {"label": "Sirajganj", "sub": "Rajshahi Division", "url": "district-detail.html?district=Sirajganj&wiki=Sirajganj%20District&division=Rajshahi"}, {"label": "Natore", "sub": "Rajshahi Division", "url": "district-detail.html?district=Natore&wiki=Natore%20District&division=Rajshahi"}, {"label": "Naogaon", "sub": "Rajshahi Division", "url": "district-detail.html?district=Naogaon&wiki=Naogaon%20District&division=Rajshahi"}, {"label": "Chapainawabganj", "sub": "Rajshahi Division", "url": "district-detail.html?district=Chapainawabganj&wiki=Chapai%20Nawabganj%20District&division=Rajshahi"}, {"label": "Joypurhat", "sub": "Rajshahi Division", "url": "district-detail.html?district=Joypurhat&wiki=Joypurhat%20District&division=Rajshahi"}, {"label": "Khulna", "sub": "Khulna Division", "url": "district-detail.html?district=Khulna&wiki=Khulna%20District&division=Khulna"}, {"label": "Jashore", "sub": "Khulna Division", "url": "district-detail.html?district=Jashore&wiki=Jessore%20District&division=Khulna"}, {"label": "Satkhira", "sub": "Khulna Division", "url": "district-detail.html?district=Satkhira&wiki=Satkhira%20District&division=Khulna"}, {"label": "Bagerhat", "sub": "Khulna Division", "url": "district-detail.html?district=Bagerhat&wiki=Bagerhat%20District&division=Khulna"}, {"label": "Kushtia", "sub": "Khulna Division", "url": "district-detail.html?district=Kushtia&wiki=Kushtia%20District&division=Khulna"}, {"label": "Jhenaidah", "sub": "Khulna Division", "url": "district-detail.html?district=Jhenaidah&wiki=Jhenaidah%20District&division=Khulna"}, {"label": "Magura", "sub": "Khulna Division", "url": "district-detail.html?district=Magura&wiki=Magura%20District&division=Khulna"}, {"label": "Narail", "sub": "Khulna Division", "url": "district-detail.html?district=Narail&wiki=Narail%20District&division=Khulna"}, {"label": "Chuadanga", "sub": "Khulna Division", "url": "district-detail.html?district=Chuadanga&wiki=Chuadanga%20District&division=Khulna"}, {"label": "Meherpur", "sub": "Khulna Division", "url": "district-detail.html?district=Meherpur&wiki=Meherpur%20District&division=Khulna"}, {"label": "Barishal", "sub": "Barishal Division", "url": "district-detail.html?district=Barishal&wiki=Barisal%20District&division=Barishal"}, {"label": "Bhola", "sub": "Barishal Division", "url": "district-detail.html?district=Bhola&wiki=Bhola%20District&division=Barishal"}, {"label": "Patuakhali", "sub": "Barishal Division", "url": "district-detail.html?district=Patuakhali&wiki=Patuakhali%20District&division=Barishal"}, {"label": "Pirojpur", "sub": "Barishal Division", "url": "district-detail.html?district=Pirojpur&wiki=Pirojpur%20District&division=Barishal"}, {"label": "Barguna", "sub": "Barishal Division", "url": "district-detail.html?district=Barguna&wiki=Barguna%20District&division=Barishal"}, {"label": "Jhalokati", "sub": "Barishal Division", "url": "district-detail.html?district=Jhalokati&wiki=Jhalokati%20District&division=Barishal"}, {"label": "Sylhet", "sub": "Sylhet Division", "url": "district-detail.html?district=Sylhet&wiki=Sylhet%20District&division=Sylhet"}, {"label": "Moulvibazar", "sub": "Sylhet Division", "url": "district-detail.html?district=Moulvibazar&wiki=Moulvibazar%20District&division=Sylhet"}, {"label": "Habiganj", "sub": "Sylhet Division", "url": "district-detail.html?district=Habiganj&wiki=Habiganj%20District&division=Sylhet"}, {"label": "Sunamganj", "sub": "Sylhet Division", "url": "district-detail.html?district=Sunamganj&wiki=Sunamganj%20District&division=Sylhet"}, {"label": "Rangpur", "sub": "Rangpur Division", "url": "district-detail.html?district=Rangpur&wiki=Rangpur%20District&division=Rangpur"}, {"label": "Dinajpur", "sub": "Rangpur Division", "url": "district-detail.html?district=Dinajpur&wiki=Dinajpur%20District&division=Rangpur"}, {"label": "Kurigram", "sub": "Rangpur Division", "url": "district-detail.html?district=Kurigram&wiki=Kurigram%20District&division=Rangpur"}, {"label": "Gaibandha", "sub": "Rangpur Division", "url": "district-detail.html?district=Gaibandha&wiki=Gaibandha%20District&division=Rangpur"}, {"label": "Thakurgaon", "sub": "Rangpur Division", "url": "district-detail.html?district=Thakurgaon&wiki=Thakurgaon%20District&division=Rangpur"}, {"label": "Panchagarh", "sub": "Rangpur Division", "url": "district-detail.html?district=Panchagarh&wiki=Panchagarh%20District&division=Rangpur"}, {"label": "Nilphamari", "sub": "Rangpur Division", "url": "district-detail.html?district=Nilphamari&wiki=Nilphamari%20District&division=Rangpur"}, {"label": "Lalmonirhat", "sub": "Rangpur Division", "url": "district-detail.html?district=Lalmonirhat&wiki=Lalmonirhat%20District&division=Rangpur"}, {"label": "Mymensingh", "sub": "Mymensingh Division", "url": "district-detail.html?district=Mymensingh&wiki=Mymensingh%20District&division=Mymensingh"}, {"label": "Jamalpur", "sub": "Mymensingh Division", "url": "district-detail.html?district=Jamalpur&wiki=Jamalpur%20District&division=Mymensingh"}, {"label": "Netrokona", "sub": "Mymensingh Division", "url": "district-detail.html?district=Netrokona&wiki=Netrokona%20District&division=Mymensingh"}, {"label": "Sherpur", "sub": "Mymensingh Division", "url": "district-detail.html?district=Sherpur&wiki=Sherpur%20District&division=Mymensingh"}, {"label": "Pohela Boishakh", "sub": "Culture topic", "url": "topic-detail.html?topic=Pohela%20Boishakh&wiki=Pohela%20Boishakh"}, {"label": "Food", "sub": "Culture topic", "url": "topic-detail.html?topic=Food&wiki=Bangladeshi%20cuisine"}, {"label": "Music", "sub": "Culture topic", "url": "topic-detail.html?topic=Music&wiki=Music%20of%20Bangladesh"}, {"label": "Dance", "sub": "Culture topic", "url": "topic-detail.html?topic=Dance&wiki=Dance%20in%20Bangladesh"}, {"label": "Clothing", "sub": "Culture topic", "url": "topic-detail.html?topic=Clothing&wiki=Bengali%20traditional%20dress"}, {"label": "Language & Literature", "sub": "Culture topic", "url": "topic-detail.html?topic=Language%20&%20Literature&wiki=Bengali%20language"}, {"label": "Festivals", "sub": "Culture topic", "url": "topic-detail.html?topic=Festivals&wiki=Public%20holidays%20in%20Bangladesh"}, {"label": "Arts & Crafts", "sub": "Culture topic", "url": "topic-detail.html?topic=Arts%20&%20Crafts&wiki=Nakshi%20kantha"}, {"label": "Sports", "sub": "Culture topic", "url": "topic-detail.html?topic=Sports&wiki=Sport%20in%20Bangladesh"}]
+;
+
+    const searchInput = document.getElementById('siteSearchInput');
+    const searchResults = document.getElementById('siteSearchResults');
+    let activeIndex = -1;
+    let currentMatches = [];
+
+    function renderResults(matches) {
+      currentMatches = matches;
+      activeIndex = -1;
+      if (matches.length === 0) {
+        searchResults.innerHTML = '<div class="site-search-empty">No matches found</div>';
+        searchResults.classList.add('open');
+        return;
+      }
+      searchResults.innerHTML = matches.slice(0, 8).map(function (m, i) {
+        return '<a class="site-search-result" data-index="' + i + '" href="' + m.url + '">' +
+          '<div class="r-label">' + m.label + '</div>' +
+          '<div class="r-sub">' + m.sub + '</div>' +
+        '</a>';
+      }).join('');
+      searchResults.classList.add('open');
+    }
+
+    function runSearch(query) {
+      const q = query.trim().toLowerCase();
+      if (!q) {
+        searchResults.classList.remove('open');
+        currentMatches = [];
+        return;
+      }
+      const matches = searchIndex.filter(function (item) {
+        return item.label.toLowerCase().includes(q) || item.sub.toLowerCase().includes(q);
+      });
+      // Items whose label starts with the query float to the top.
+      matches.sort(function (a, b) {
+        const aStarts = a.label.toLowerCase().startsWith(q) ? 0 : 1;
+        const bStarts = b.label.toLowerCase().startsWith(q) ? 0 : 1;
+        return aStarts - bStarts;
+      });
+      renderResults(matches);
+    }
+
+    if (searchInput) {
+      searchInput.addEventListener('input', function () {
+        runSearch(searchInput.value);
+      });
+
+      searchInput.addEventListener('keydown', function (e) {
+        const items = searchResults.querySelectorAll('.site-search-result');
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          if (items.length) {
+            activeIndex = (activeIndex + 1) % items.length;
+            items.forEach(function (el, i) { el.classList.toggle('active', i === activeIndex); });
+          }
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (items.length) {
+            activeIndex = (activeIndex - 1 + items.length) % items.length;
+            items.forEach(function (el, i) { el.classList.toggle('active', i === activeIndex); });
+          }
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          // Enter jumps straight to the highlighted result, or the best match if none is highlighted.
+          const target = activeIndex >= 0 ? currentMatches[activeIndex] : currentMatches[0];
+          if (target) {
+            window.location.href = target.url;
+          }
+        } else if (e.key === 'Escape') {
+          searchResults.classList.remove('open');
+          searchInput.blur();
+        }
+      });
+
+      // Close the dropdown when clicking elsewhere, but allow result clicks to register first.
+      document.addEventListener('click', function (e) {
+        if (!e.target.closest('.site-search')) {
+          searchResults.classList.remove('open');
+        }
+      });
+
+      searchInput.addEventListener('focus', function () {
+        if (searchInput.value.trim()) {
+          searchResults.classList.add('open');
+        }
+      });
+    }
+  </script>
+
+</body>
+</html>
